@@ -1,63 +1,109 @@
 from tabulate import tabulate
 
-n = int(input("Number of processes: "))
-d = dict()
-
-for i in range(n):
-    key = chr(65+i)
-    at = int(input("Arrival time of " + key + ": "))
-    bt = int(input("Burst time of " + key + ": "))
-    d[key] = {'Arrival Time': at, 'Burst Time': bt}
-
-# Sort the dictionary based on arrival time
-sorted_d = dict(sorted(d.items(), key=lambda item: item[1]['Arrival Time']))
-
-# Function that gets the Finish Time
-def calculate_finish_time(table):
-    for key, values in table.items():
-        if key == list(table.keys())[0]:
-            table[key]['Finish Time'] = values['Burst Time'] + values['Arrival Time']
-        else:
-            table[key]['Finish Time'] = max(table[key]['Arrival Time'], table[list(table.keys())[list(table.keys()).index(key) - 1]]['Finish Time']) + table[key]['Burst Time']
-
-# Function that gets the Turnaround Time
-def calculate_turnaround_time(processes):
-    sorted_processes = dict(sorted(processes.items(), key=lambda item: item[1]['Arrival Time']))
-
-    for key, values in sorted_processes.items():
-        sorted_processes[key]['Turnaround Time'] = values['Finish Time'] - values['Arrival Time']
-
-    return sorted_processes
-
-# Function that gets the Waiting Time
-def calculate_waiting_time(processes):
-    for key, values in processes.items():
-        processes[key]['Waiting Time'] = values['Turnaround Time'] - values['Burst Time']
-
-    return processes
-
-# Calcuulate Average TaT
 def calculate_turnaround_time(processes):
     total_turnaround_time = 0
 
     for process in processes:
-        process['Turnaround Time'] = process['Finish Time'] - process['Arrival Time']
-        total_turnaround_time += process['Turnaround Time']
+        process['tat'] = process['ft'] - process['at']
+        total_turnaround_time += process['tat']
 
     average_turnaround_time = total_turnaround_time / len(processes)
 
-    return processes, avg_turnaround_time
+    return processes, average_turnaround_time
 
-calculate_finish_time(sorted_d)
-calculate_waiting_time(sorted_d)
+def calculate_waiting_time(processes):
+    total_waitiing_time = 0
+    for process in processes:
+        process['wt'] = process['tat'] - process['bt']
+        total_waitiing_time += process['wt']
+        
+    average_waiting_time = total_waitiing_time / len(processes)
 
-processes, avg_turnaround_time = calculate_turnaround_time(sorted_d)
+    return processes, average_waiting_time
+
+def print_timeline(processes):
+    sorted_processes = sorted(processes, key=lambda x: x['at'])
+    print("\nTimeline: ")
+    print("|  ", end="")
+    for process in sorted_processes:
+        print(process['pid'] + "  |  ", end="")
+
+    
+    for index, process in enumerate(sorted_processes):
+        if index == 0:
+            print("\n"+ str(process['at']), end="     ")
+            print(process['ft'], end="     ")
+        else:
+            print(process['ft'], end="")
+            if len(str(process['ft'])) > 1:
+                print("    ", end="")
+            else:
+                print("     ", end="")
 
 
+def print_table(processes):
+    sorted_processes = sorted(processes, key=lambda x: x['at'])
+    table = []
+    for process in processes:
+        table.append([process['pid'], process['at'], process['bt'], process['ft'], process['tat'], process['wt']])
+    print(tabulate(table, headers=['PID', 'AT', 'BT', 'FT', 'TaT', 'WT']))
 
-table = []
-for key, values in sorted_d.items():
-    table.append([key, values['Arrival Time'], values['Burst Time'], values['Finish Time'], values['Turnaround Time'], values['Waiting Time']])
-print(tabulate(table, headers=['ID', 'AT', 'BT', 'FT', 'TT', 'WT']))
 
-print("Average TaT: {avg_turnarond_time}")
+def calculate_ft(processes):
+    previous_finish_time = 0
+    sorted_processes = sorted(processes, key=lambda x: x['at']) 
+    print(sorted_processes)
+    for i, process in enumerate(sorted_processes):
+        if i == 0:
+            if process['at'] == 0:
+                process['ft'] = process['bt']
+            else:
+                process['ft'] = process['bt'] + process['at']
+        else:
+            process['ft'] = previous_finish_time + process['bt']#prev proces ft + bt
+        previous_finish_time = process['ft']
+    return sorted_processes
+
+
+def main():
+    # n = int(input("Number of processes: "))
+    # processes = []
+
+    # User input on processes
+    # for i in range(n):
+    #     process_id = chr(65 + i)
+    #     arrival_time = int(input(f"Arrival time of Process {process_id}: "))
+    #     burst_time = int(input(f"Burst time of Process {process_id}: "))
+    #     processes.append({'pid': process_id, 'at': arrival_time, 'bt': burst_time, 'ft': 0, 'tat': 0, 'wt': 0})
+
+    # dummy data
+    n = 3
+    processes = [{'pid': 'A', 'at': 5, 'bt': 7, 'ft': 0, 'tat': 0, 'wt': 0}, {'pid': 'B', 'at': 2, 'bt': 5, 'ft': 0, 'tat': 0, 'wt': 0}, {'pid': 'C', 'at': 8, 'bt': 2, 'ft': 0, 'tat': 0, 'wt': 0}]
+
+    # Calculate finish time
+    proessess = calculate_ft(processes)
+
+
+    # Calculate turnaround time
+    processes, avg_tat = calculate_turnaround_time(processes)
+
+    # Calculate waiting time
+    processes, avg_wt = calculate_waiting_time(processes)
+
+    # Format to 2 decmals
+    avg_tat = "{:.2f}".format(avg_tat)
+    avg_wt = "{:.2f}".format(avg_wt)
+
+        
+    # Display the data using tabulate
+    print_table(processes)
+    
+    # Display Averages
+    print(f"\nAverage Turnaround Time: {avg_tat}")
+    print(f"\nAverage Waiting Time: {avg_wt}")
+
+    # Display Timeline
+    print_timeline(processes)
+
+if __name__ == "__main__":
+    main()
