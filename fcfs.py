@@ -9,32 +9,55 @@ for i in range(n):
     bt = int(input("Burst time of " + key + ": "))
     d[key] = {'Arrival Time': at, 'Burst Time': bt}
 
-# Display the sorted data using tabulate
-table = []
-for key, values in sorted(d.items()):
-    table.append([key, values['Arrival Time'], values['Burst Time']])
-
-print(tabulate(table, headers=['ID', 'AT', 'BT']))
-
 # Sort the dictionary based on arrival time
 sorted_d = dict(sorted(d.items(), key=lambda item: item[1]['Arrival Time']))
 
 # Function that gets the Finish Time
-def ft(table):
-    for n in table:
-        if n == 0:
-            table["ft"] = table[n][2] + table[n][1]
+def calculate_finish_time(table):
+    for key, values in table.items():
+        if key == list(table.keys())[0]:
+            table[key]['Finish Time'] = values['Burst Time'] + values['Arrival Time']
         else:
-            table["ft"] = table[n-1][3] + table[n][2]
+            table[key]['Finish Time'] = max(table[key]['Arrival Time'], table[list(table.keys())[list(table.keys()).index(key) - 1]]['Finish Time']) + table[key]['Burst Time']
+
+# Function that gets the Turnaround Time
+def calculate_turnaround_time(processes):
+    sorted_processes = dict(sorted(processes.items(), key=lambda item: item[1]['Arrival Time']))
+
+    for key, values in sorted_processes.items():
+        sorted_processes[key]['Turnaround Time'] = values['Finish Time'] - values['Arrival Time']
+
+    return sorted_processes
+
+# Function that gets the Waiting Time
+def calculate_waiting_time(processes):
+    for key, values in processes.items():
+        processes[key]['Waiting Time'] = values['Turnaround Time'] - values['Burst Time']
+
+    return processes
+
+# Calcuulate Average TaT
+def calculate_turnaround_time(processes):
+    total_turnaround_time = 0
+
+    for process in processes:
+        process['Turnaround Time'] = process['Finish Time'] - process['Arrival Time']
+        total_turnaround_time += process['Turnaround Time']
+
+    average_turnaround_time = total_turnaround_time / len(processes)
+
+    return processes, avg_turnaround_time
+
+calculate_finish_time(sorted_d)
+calculate_waiting_time(sorted_d)
+
+processes, avg_turnaround_time = calculate_turnaround_time(sorted_d)
 
 
-ft(sorted_d)
 
-print("/n")
-table2 = []
-for key, values in sorted(d.items()):
-    table2.append([key, values['AT'], values['BT'], values['FT']])
+table = []
+for key, values in sorted_d.items():
+    table.append([key, values['Arrival Time'], values['Burst Time'], values['Finish Time'], values['Turnaround Time'], values['Waiting Time']])
+print(tabulate(table, headers=['ID', 'AT', 'BT', 'FT', 'TT', 'WT']))
 
-print(tabulate(table, headers=['ID', 'AT', 'BT', 'FT']))
-
-
+print("Average TaT: {avg_turnarond_time}")
