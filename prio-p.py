@@ -20,6 +20,10 @@ def priority_preemptive(processes, burst_time, arrival_time, priority):
     gantt_chart = ""
     gantt_chart_numbers = ""
     
+    # Initialize variables for CPU utilization
+    total_burst_time = sum(burst_time)
+    total_cpu_time = 0
+    
     # Continue processing until all processes are done
     while any(remaining_time):
         min_priority = float('inf')
@@ -34,6 +38,7 @@ def priority_preemptive(processes, burst_time, arrival_time, priority):
             gantt_chart += f"{process_names[selected_process]:^3}"
             gantt_chart_numbers += f"{time:^3}"
             remaining_time[selected_process] -= 1
+            total_cpu_time += 1
 
             if remaining_time[selected_process] == 0:
                 turnaround_time[selected_process] = time + 1 - arrival_time[selected_process]
@@ -44,6 +49,9 @@ def priority_preemptive(processes, burst_time, arrival_time, priority):
     # Calculate average waiting time and average turnaround time
     avg_waiting_time = sum(waiting_time) / n
     avg_turnaround_time = sum(turnaround_time) / n
+    
+    # Calculate CPU utilization
+    cpu_utilization = (total_cpu_time / total_burst_time) * 100
     
     # Create a table for input and output data
     table_data = list(zip(process_names, burst_time, arrival_time, priority, waiting_time, turnaround_time))
@@ -58,6 +66,7 @@ def priority_preemptive(processes, burst_time, arrival_time, priority):
     print(gantt_chart_numbers)
     print("\nAverage Waiting Time:", avg_waiting_time)
     print("Average Turnaround Time:", avg_turnaround_time)
+    print("CPU Utilization:", f"{cpu_utilization:.2f}%")
 
 # Input from the user
 processes = input("Enter process names (separated by space): ").split()
